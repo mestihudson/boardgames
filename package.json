@@ -1,0 +1,18 @@
+{
+  "license": "ISC",
+  "description": "hive boardgame implementation",
+  "repository": "https://github.com/mestihudson/boardgames/tree/hive",
+  "scripts": {
+    "test": "cucumber-js --require src/test/core/cucumber.conf.js --format node_modules/cucumber-pretty --require src/test/core/step-defs --require-module @babel/register src/test/core/features",
+    "test:watch": "nodemon --ignore 'node_modules/*' --watch . -e js,feature,json --exec yarn test"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/register": "^7.7.4",
+    "babel-plugin-module-resolver": "^3.2.0",
+    "cucumber": "^6.0.5",
+    "cucumber-pretty": "^6.0.0",
+    "nodemon": "^2.0.1"
+  }
+}

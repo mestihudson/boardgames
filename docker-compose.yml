@@ -1,0 +1,21 @@
+version: '3.7'
+
+networks:
+  boardgames:
+   name: boardgames
+   ipam:
+     config:
+     - subnet: 10.3.3.0/24
+
+services:
+  boardgames-app:
+    container_name: boardgames-app
+    image: node:10.17.0-alpine
+    entrypoint: /bin/sh -c 'tail -f'
+    working_dir: /ws
+    volumes:
+    - .:/ws
+    networks:
+      boardgames:
+        ipv4_address: 10.3.3.2
+
