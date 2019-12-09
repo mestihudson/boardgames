@@ -3,16 +3,23 @@
   "description": "hive boardgame implementation",
   "repository": "https://github.com/mestihudson/boardgames/tree/hive",
   "scripts": {
-    "test": "cucumber-js --require src/test/core/cucumber.conf.js --format node_modules/cucumber-pretty --require src/test/core/step-defs --require-module @babel/register src/test/core/features",
-    "test:watch": "nodemon --ignore 'node_modules/*' --watch . -e js,feature,json --exec yarn test"
+    "test": "rm -frv target && tsc && cucumber-js --require target --require-module @babel/register --format node_modules/cucumber-pretty src",
+    "test:watch": "nodemon --ignore 'node_modules/*' --ignore 'target/*' --watch . -e js,ts,feature,json --exec 'yarn test --tags @focus || exit 1'"
   },
   "devDependencies": {
-    "@babel/core": "^7.7.4",
-    "@babel/preset-env": "^7.7.4",
+    "@babel/core": "^7.7.5",
+    "@babel/node": "^7.7.4",
+    "@babel/preset-env": "^7.7.6",
+    "@babel/preset-typescript": "^7.7.4",
     "@babel/register": "^7.7.4",
+    "@types/cucumber": "^6.0.0",
+    "@types/node": "^12.12.15",
     "babel-plugin-module-resolver": "^3.2.0",
+    "chai": "^4.1.2",
     "cucumber": "^6.0.5",
     "cucumber-pretty": "^6.0.0",
-    "nodemon": "^2.0.1"
+    "nodemon": "^2.0.1",
+    "ts-node": "^8.5.4",
+    "typescript": "^3.7.3"
   }
 }
