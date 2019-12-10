@@ -3,7 +3,7 @@
   "description": "hive boardgame implementation",
   "repository": "https://github.com/mestihudson/boardgames/tree/hive",
   "scripts": {
-    "test": "rm -frv target && tsc && cucumber-js --require target --require-module @babel/register --format node_modules/cucumber-pretty src",
+    "test": "tsc && cucumber-js --require target --require-module @babel/register --format node_modules/cucumber-pretty src",
     "test:watch": "nodemon --ignore 'node_modules/*' --ignore 'target/*' --watch . -e js,ts,feature,json --exec 'yarn test --tags @focus || exit 1'"
   },
   "devDependencies": {

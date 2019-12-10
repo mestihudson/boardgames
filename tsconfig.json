@@ -13,8 +13,8 @@
     "types": ["node", "cucumber"],
     "baseUrl": ".",
     "paths": {
-			"@/*": ["./src/*"]
-		}
+      "@/*": ["./src/*"]
+    }
   },
   "exclude": [
     "node_modules",
