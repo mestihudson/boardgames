@@ -14,7 +14,7 @@ Feature: Hive
         And Hive has "1" piece of "two" player
 
   Scenario: Puts
-      Given There is a hive started with "Grasshopper" and responded with position "0" of "Bee" bug
+      Given There is a hive started with "Grasshopper" and responded with "Bee" on its "0" position
        When Player "one" puts "Spider" on position "2" of "Grasshopper" bug
        Then Hive has "2" pieces of "one" player
         And Hive has "1" piece of "two" player
@@ -23,3 +23,4 @@ Feature: Hive
       Given There is a hive with six played turns
        When Player "one" puts "Grasshopper" on hive
        Then There has raised a error "Imperative put the Bee"
+

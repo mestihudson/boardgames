@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import { Hive } from '@/main/core/All'
 
 let hive: Hive
-let error
+let error: Error
 
 Before(() => {
   hive = new Hive()
@@ -38,33 +38,33 @@ When(/^Player two responses with "(\w+)" on position "(\d+)" of "(\w+)" bug$/, (
   hive.responses(bug, position, target)
 })
 
-Given(/^There is a hive started with "(\w+)" and responded with position "(\d+)" of "(\w+)" bug$/, (
-  bug: string, position: number, target: string
+Given(/^There is a hive started with "(\w+)" and responded with "(\w+)" on its "(\d+)" position$/, (
+  start: string, response: string, position: number
 ) => {
   hive
-    .starts(bug)
-    .responses(target, position, bug)
+    .starts(start)
+    .responses(response, position, start)
 })
 
 When(/^Player "(\w+)" puts "(\w+)" on position "(\d+)" of "(\w+)" bug$/, (
   player: string, incoming: string, position: number, target: string
 ) => {
-  hive.puts(player, incoming, position, target)
+  hive.puts(incoming, position, target)
 })
 
 Given(/^There is a hive with six played turns$/, () => {
   hive
     .starts("Beetle")
     .responses("Spider", 1, "Beetle")
-    .puts("one", "Ant", 1, "Beetle")
-    .puts("two", "Grasshopper", 1, "Spider")
-    .puts("one", "Spider", 1, "Ant")
-    .puts("two", "Beetle", 1, "Grasshopper")
+    .puts("Ant", 1, "Beetle")
+    .puts("Grasshopper", 1, "Spider")
+    .puts("Spider", 1, "Ant")
+    .puts("Beetle", 1, "Grasshopper")
 })
 
 When(/^Player "(\w+)" puts "(\w+)" on hive$/, (player: string, bug: string) => {
   try {
-    hive.puts(player, bug, 1, "Ant")
+    hive.puts(bug, 1, "Ant")
   } catch(e) {
     error = e
   }
