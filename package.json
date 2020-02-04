@@ -5,17 +5,6 @@
     "lint-staged": "^10.0.7",
     "standard": "^14.3.1"
   },
-  "lint-staged": {
-    "*.js": [
-      "standard --fix",
-      "git add"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "scripts": {
     "test": "jest"
   }
