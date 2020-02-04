@@ -10,7 +10,10 @@
     "standard": "^14.3.1"
   },
   "scripts": {
-    "test": "jest"
+    "jest": "jest",
+    "test:unit": "jest",
+    "test:unit:watch": "yarn test:unit --watchAll",
+    "test:unit:coverage": "yarn test:unit --coverage --collectCoverageFrom=src/main/**/*.{js}"
   },
   "standard": {
     "env": [
