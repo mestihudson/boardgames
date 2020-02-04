@@ -14,13 +14,12 @@ export default class Hive {
   pair (one, two) {
     this.before = [...this.config]
     this.after = this.before.map((turn, index) => {
-      if (index === one) {
-        return this.glue(this.pieceAt(one), this.pieceAt(two), 'n')
+      switch (index) {
+        case one:
+          return this.glue(this.pieceAt(one), this.pieceAt(two), 'n')
+        case two:
+          return this.glue(this.pieceAt(two), this.pieceAt(one), 'n')
       }
-      if (index === two) {
-        return this.glue(this.pieceAt(two), this.pieceAt(one), 'n')
-      }
-      return turn
     })
     this.config = this.after
   }
