@@ -11,10 +11,12 @@ services:
   boardgames-app:
     container_name: boardgames-app
     image: node:10.17.0-alpine
-    entrypoint: /bin/sh -c 'tail -f'
+    entrypoint: /bin/sh -c 'apk update && apk add git && npm install; tail -f'
     working_dir: /ws
     volumes:
     - .:/ws
+    - .gitconfig:/root/.gitconfig
+    - .gitconfig.user:/root/.gitconfig.user
     networks:
       boardgames:
         ipv4_address: 10.3.3.2
