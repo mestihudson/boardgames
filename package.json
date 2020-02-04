@@ -13,7 +13,8 @@
     "jest": "jest",
     "test:unit": "jest",
     "test:unit:watch": "yarn test:unit --watchAll",
-    "test:unit:coverage": "yarn test:unit --coverage --collectCoverageFrom=src/main/**/*.{js}"
+    "test:unit:coverage": "yarn test:unit --coverage --collectCoverageFrom=src/main/**/*.{js}",
+    "test:ci": "yarn test:unit:coverage --silent --noStackTrace"
   },
   "standard": {
     "env": [
