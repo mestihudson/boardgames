@@ -18,8 +18,7 @@
     "test:unit:coverage": "yarn test:unit --coverage --silent --noStackTrace"
   },
   "standard": {
-    "env": [
-      "jest"
-    ]
+    "env": ["jest"],
+    "global": ["fail"]
   }
 }
