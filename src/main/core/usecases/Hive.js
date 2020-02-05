@@ -1,56 +1,79 @@
+import InvalidPlaceError from '@/core/usecases/InvalidPlaceError'
+
 export default class Hive {
   constructor () {
     this.config = []
   }
 
-  put (bug) {
-    this.config.push(bug + ':0,0,0,0,0,0')
-    if (this.config.length === 2) {
-      this.pair(0, 1)
+  put (bug, direction, target) {
+    this.config.push(
+      this.from(
+        this.create(bug)
+      )
+    )
+    switch (this.config.length) {
+      case 2: {
+        const { one, two } = this.join(this.at(0), this.at(1), direction)
+        const after = [one, two].map((item) => this.from(item))
+        this.config = [...after]
+        break
+      }
+      default: {
+        if (this.config.length > 2) {
+          const before = [...this.config]
+          const lastIndex = this.config.length - 1
+          const latest = this.at(lastIndex)
+          for (let index = 0, size = before.length; index < size; index++) {
+            const current = this.to(before[index])
+            if (target === current.bug) {
+              if (index % 2 === lastIndex % 2) {
+                const { one, two } = this.join(current, latest, direction)
+                before[index] = this.from(one)
+                before[size - 1] = this.from(two)
+                break
+              }
+              throw new InvalidPlaceError()
+            }
+          }
+          this.config = [...before]
+          break
+        }
+      }
     }
     return this
   }
 
-  pair (one, two) {
-    this.before = [...this.config]
-    this.after = this.before.map((turn, index) => {
-      switch (index) {
-        case one:
-          return this.glue(this.pieceAt(one), this.pieceAt(two), 'n')
-        case two:
-          return this.glue(this.pieceAt(two), this.pieceAt(one), 'n')
-      }
-    })
-    this.config = this.after
+  join (one, two, direction) {
+    one.side[direction || 'n'] = two.bug
+    two.side.n = one.bug
+    return { one, two }
   }
 
-  glue (one, two, position) {
-    one.side[position] = two.bug
-    return this.toLine(one)
-  }
-
-  toLine (piece) {
+  from ({ bug, side }) {
     return [
-      piece.bug,
+      bug,
       [
-        piece.side.n,
-        piece.side.ne,
-        piece.side.se,
-        piece.side.s,
-        piece.side.sw,
-        piece.side.nw
+        side.n,
+        side.ne,
+        side.se,
+        side.s,
+        side.sw,
+        side.nw
       ].join(',')
     ].join(':')
   }
 
-  pieceAt (position) {
-    const [bug, sides] = this.config[position].split(':')
+  at (position) {
+    return this.to(this.config[position])
+  }
+
+  to (line) {
+    const [bug, sides] = line.split(':')
     const [n, ne, se, s, sw, nw] = sides.split(',')
-    return {
-      bug,
-      side: {
-        n, ne, se, s, sw, nw
-      }
-    }
+    return this.create(bug, n, ne, se, s, sw, nw)
+  }
+
+  create (bug, n = 0, ne = 0, se = 0, s = 0, sw = 0, nw = 0) {
+    return { bug, side: { n, ne, se, s, sw, nw } }
   }
 }

@@ -1,9 +1,8 @@
 {
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
     "babel-plugin-module-resolver": "^3.2.0",
-    "babel-preset-env": "^1.7.0",
     "husky": "^4.2.1",
     "jest": "^25.1.0",
     "lint-staged": "^10.0.7",
@@ -12,11 +11,11 @@
   "scripts": {
     "jest": "jest",
     "test:unit": "jest",
-    "test:unit:watch": "yarn test:unit --watchAll",
-    "test:unit:coverage": "yarn test:unit --coverage --collectCoverageFrom=src/main/**/*.{js}",
-    "test:lint": "standard",
+    "test:lint": "standard --fix",
     "test:lint:staged": "lint-staged",
-    "test:ci": "yarn test:lint:staged && yarn test:unit:coverage --silent --noStackTrace"
+    "test:unit:watch": "yarn test:unit --watchAll",
+    "test:ci": "yarn test:lint:staged && yarn test:unit:coverage",
+    "test:unit:coverage": "yarn test:unit --coverage --silent --noStackTrace"
   },
   "standard": {
     "env": [
