@@ -30,7 +30,7 @@ const join = (one, two, direction) => {
 const secondPlace = ({ bug, placements, direction }) => {
   if (placements.length === 1) {
     const { one, two } = join(
-      placements[0], placement(bug, 'T', 1), direction = 'n'
+      placements[0], placement(bug, 'T', 1), direction || 'n'
     )
     const result = { bug, placements: [one, two], direction }
     return result
@@ -40,7 +40,7 @@ const secondPlace = ({ bug, placements, direction }) => {
 
 const firstPlace = ({ bug, placements }) => {
   if (placements.length === 0) {
-    const result = { bug, placements: [ placement(bug, 'O', 0) ] }
+    const result = { bug, placements: [placement(bug, 'O', 0)] }
     return result
   }
   return { bug, placements }
