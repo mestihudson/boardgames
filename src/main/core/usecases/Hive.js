@@ -156,7 +156,18 @@ export default class Hive {
     ]
   }
 
-  execute (bug, direction, target) {
+  execute (statement) {
+    const [ command, ...params ] = statement.split(',')
+    if (command === 'P') {
+      const [ bug, direction, target ] = params
+      return this.place(bug, direction, target)
+    }
+    if (command === 'M') {
+      return this.move(params)
+    }
+  }
+
+  place (bug, direction, target) {
     const { placements } = firstRound(
       nextRounds(
         alreadyPlaced(
