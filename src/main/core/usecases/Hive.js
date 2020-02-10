@@ -56,19 +56,6 @@ const firstPlace = ({ bug, placements }) => {
   return { bug, placements }
 }
 
-const firstRound = ({ bug, placements, direction }) => {
-  if (placements.length < 2) {
-    const result = firstPlace(
-      secondPlace({ bug, placements, direction })
-    )
-    return result
-  }
-  return { placements }
-}
-
-const alreadyPlaced = ({ bug, placements }) => {
-}
-
 const queenHasPlaced = ({ bug, placements }) => {
   const next = placements.length
   const player = next % 2 === 0 ? 'O' : 'T'
@@ -112,24 +99,6 @@ const nextPlace = ({ bug, placements }, target, direction) => {
       .concat([two])
   }
   return result
-}
-
-const nextRounds = ({ bug, placements }, direction, target) => {
-  if (placements.length >= 2) {
-    const result = {
-      ...nextPlace(
-        queenHasPlaced(
-          available(
-            sibling({ bug, placements }, target), direction
-          )
-        ), target, direction
-      ),
-      bug,
-      direction
-    }
-    return result
-  }
-  return { bug, placements, direction }
 }
 
 const serialize = ({ bug, player, location, directions }) => {
@@ -219,15 +188,43 @@ export default class Hive {
     return { bug, placements }
   }
 
+  firstRound ({ bug, placements, direction }) {
+    if (placements.length < 2) {
+      const result = firstPlace(
+        secondPlace({ bug, placements, direction })
+      )
+      return result
+    }
+    return { placements }
+  }
+
+  nextRounds ({ bug, placements, direction, target }) {
+    if (placements.length >= 2) {
+      const result = {
+        ...nextPlace(
+          queenHasPlaced(
+            available(
+              sibling({ bug, placements }, target), direction
+            )
+          ), target, direction
+        ),
+        bug,
+        direction
+      }
+      return result
+    }
+    return { bug, placements, direction }
+  }
+
   place ({ command, bug, direction, target, placements }) {
     if (command === 'P') {
-      return firstRound(
-        nextRounds(
-          this.alreadyPlaced({
+      return this.firstRound({
+        ...this.nextRounds({
+          ...this.alreadyPlaced({
             ...this.valid({ bug }), placements
           }), direction, target
-        )
-      )
+        })
+      })
     }
     return { placements }
   }
