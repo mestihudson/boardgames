@@ -26,7 +26,7 @@ const redirect = (source, target, direction) => {
   directions[direction] = target.bug
   // TODO: find a way to make it immutable
   const result = placement(bug, player, location, directions)
-  console.log(result)
+  // console.log(result)
   return result
 }
 
@@ -66,25 +66,7 @@ const firstRound = ({ bug, placements, direction }) => {
   return { placements }
 }
 
-const valid = (bug, bugs) => {
-  if (!bugs.some((piece) => piece === bug)) {
-    throw new BugUnknownException(bug, bugs)
-  }
-  return bug
-}
-
-const alreadyPlaced = (bug, placements) => {
-  const next = placements.length
-  if (next > 1) {
-    const player = next % 2 === 0 ? 'O' : 'T'
-    const hasPlaced = placements
-      .filter((p) => p.player === player)
-      .some((p) => p.bug === bug)
-    if (hasPlaced) {
-      throw new BugAlreadyPlacedException()
-    }
-  }
-  return { bug, placements }
+const alreadyPlaced = ({ bug, placements }) => {
 }
 
 const queenHasPlaced = ({ bug, placements }) => {
@@ -180,19 +162,13 @@ const queen = (
 
 export default class Hive {
   constructor () {
+    this.turn = new Turn()
+    this.bugs = new Bugs()
     this.placements = []
-    this.pieces = [
-      'Q', 'S#1', 'S#2', 'B#1', 'B#2', 'G#1', 'G#2', 'G#3', 'A#1', 'A#2', 'A#3'
-    ]
-    this.turn = ''
-  }
-
-  toggle () {
-    this.turn = this.turn === 'O' ? 'T' : 'O'
   }
 
   execute (statement) {
-    this.toggle()
+    this.turn.toggle()
     const [command, bug, direction, target] = statement.split(',')
     const { placements } = this.move({
       ...this.place({
@@ -204,15 +180,34 @@ export default class Hive {
     return this
   }
 
+  valid ({ bug }) {
+    if (!this.bugs.valid(bug)) {
+      throw new BugUnknownException(bug, this.bugs)
+    }
+    return { bug }
+  }
+
+  alreadyPlaced({ bug, placements }) {
+    const next = placements.length
+    if (next > 1) {
+      const player = next % 2 === 0 ? 'O' : 'T'
+      const hasPlaced = placements
+        .filter((p) => p.player === player)
+        .some((p) => p.bug === bug)
+      if (hasPlaced) {
+        throw new BugAlreadyPlacedException()
+      }
+    }
+    return { bug, placements }
+  }
+
   place ({ command, bug, direction, target, placements }) {
     if (command === 'P') {
       return firstRound(
         nextRounds(
-          alreadyPlaced(
-            valid(
-              bug, this.pieces
-            ), placements
-          ), direction, target
+          this.alreadyPlaced({
+            ...this.valid({ bug }), placements
+          }), direction, target
         )
       )
     }
@@ -224,5 +219,27 @@ export default class Hive {
       return queen(this.turn, target.split(':'), direction, placements)
     }
     return { placements }
+  }
+}
+
+class Turn {
+  toggle () {
+    this.state = this.state === undefined || 'T' ? 'O' : 'T'
+  }
+
+  player () {
+    return this.state
+  }
+}
+
+class Bugs {
+  constructor () {
+    this.names = [
+      'Q', 'S#1', 'S#2', 'B#1', 'B#2', 'G#1', 'G#2', 'G#3', 'A#1', 'A#2', 'A#3'
+    ]
+  }
+
+  valid (bug) {
+    return this.names.some((name) => name === bug)
   }
 }
