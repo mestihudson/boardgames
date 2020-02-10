@@ -148,22 +148,44 @@ const serialize = ({ bug, player, location, directions }) => {
   return serialized
 }
 
+
+const moveQueen = (player, placements, target, direction) => {
+  const source = placements.find((p) => p.bug === 'Q' && p.player === player)
+  const [targetBug, targetPlayer] = target.split(':')
+  target = placements
+    .find((p) => p.bug === targetBug && p.player === targetPlayer)
+  const { one, two } = join(source, target, direction)
+  const result = {
+    placements: placements
+      .map((p) => p.bug === target && p.player === player ? one : p)
+      .concat([two])
+  }
+  return result
+}
+
 export default class Hive {
   constructor () {
     this.placements = []
     this.pieces = [
       'Q', 'S#1', 'S#2', 'B#1', 'B#2', 'G#1', 'G#2', 'G#3', 'A#1', 'A#2', 'A#3'
     ]
+    this.turn = ''
+  }
+
+  toggle () {
+    this.turn = this.turn === 'O' ? 'T' : 'O'
   }
 
   execute (statement) {
-    const [ command, ...params ] = statement.split(',')
+    const [command, ...params] = statement.split(',')
+    this.toggle()
     if (command === 'P') {
-      const [ bug, direction, target ] = params
+      const [bug, direction, target] = params
       return this.place(bug, direction, target)
     }
     if (command === 'M') {
-      return this.move(params)
+      const [bug, direction, target] = params
+      return this.move(bug, direction, target)
     }
   }
 
@@ -177,6 +199,14 @@ export default class Hive {
         ), direction, target
       )
     )
+    this.placements = [...placements]
+    this.config = this.placements.map((placement) => serialize(placement))
+    return this
+  }
+
+  move (bug, direction, target) {
+    console.warn(bug)
+    const { placements } = moveQueen(this.turn, this.config, target, direction)
     this.placements = [...placements]
     this.config = this.placements.map((placement) => serialize(placement))
     return this

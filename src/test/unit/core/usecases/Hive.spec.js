@@ -110,7 +110,12 @@ describe('Hive', () => {
     shouldThrow(() => execute(bugs), 'UnavailablePlaceException')
   })
 
-  xit('should not can move if queen bee has not placed', () => {})
+  xit('should not can move if queen bee has not placed', () => {
+  })
 
-  xit('should can move only after queen bee placed', () => {})
+  fit('should can move only after queen bee placed', () => {
+    const commands = [ 'P,Q', 'P,B#1,se,Q', 'M,Q,s,B#1']
+    const config = ['Q:O:0:B#1,0,0,0,0,0', 'B#1:T:1:0,0,0,Q,0,0']
+    shouldMatch(commands, config)
+  })
 })
