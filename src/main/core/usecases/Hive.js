@@ -3,6 +3,15 @@ import {
   BugAlreadyPlacedException, UnavailablePlaceException
 } from '@/core/usecases/Exceptions'
 
+class Placement {
+  constructor ({ bug, player, location, directions }) {
+    this.bug = bug
+    this.player = player
+    this.location = location
+    this.directions = new Directions(directions)
+  }
+}
+
 const placement = (bug, player, location, directions = {
   n: 0, ne: 0, se: 0, s: 0, sw: 0, nw: 0
 }) => {
@@ -12,11 +21,12 @@ const placement = (bug, player, location, directions = {
 
 const redirect = (source, target, direction) => {
   const { bug, player, location, directions } = source
+  // Object.entries(directions).find((d) => d === target.bug)
   // TODO: find a way to make it immutable
   directions[direction] = target.bug
   // TODO: find a way to make it immutable
   const result = placement(bug, player, location, directions)
-  // console.log(result)
+  console.log(result)
   return result
 }
 
@@ -148,17 +158,22 @@ const serialize = ({ bug, player, location, directions }) => {
   return serialized
 }
 
+const bugFinder = (placement, bug, player) =>
+  placement.bug === bug && placement.player === player
 
-const moveQueen = (player, placements, target, direction) => {
-  const source = placements.find((p) => p.bug === 'Q' && p.player === player)
-  const [targetBug, targetPlayer] = target.split(':')
-  target = placements
-    .find((p) => p.bug === targetBug && p.player === targetPlayer)
-  const { one, two } = join(source, target, direction)
+const placementBy = (bug, player, placements) =>
+  placements.find((placement) => bugFinder(placement, bug, player))
+
+const queen = (
+  sourcePlayer, [targetBug, targetPlayer], targetDirection, placements
+) => {
+  const source = placementBy('Q', sourcePlayer, placements)
+  const target = placementBy(targetBug, targetPlayer, placements)
+  const { one, two } = join(source, target, targetDirection)
   const result = {
     placements: placements
-      .map((p) => p.bug === target && p.player === player ? one : p)
-      .concat([two])
+      .map((p) => bugFinder(p, source.bug, source.player) ? one : p)
+      .map((p) => bugFinder(p, target.bug, target.player) ? two : p)
   }
   return result
 }
@@ -177,38 +192,37 @@ export default class Hive {
   }
 
   execute (statement) {
-    const [command, ...params] = statement.split(',')
     this.toggle()
+    const [command, bug, direction, target] = statement.split(',')
+    const { placements } = this.move({
+      ...this.place({
+        command, bug, direction, target, placements: this.placements
+      }), command, bug, direction, target
+    })
+    this.placements = [...placements]
+    this.config = this.placements.map((placement) => serialize(placement))
+    return this
+  }
+
+  place ({ command, bug, direction, target, placements }) {
     if (command === 'P') {
-      const [bug, direction, target] = params
-      return this.place(bug, direction, target)
-    }
-    if (command === 'M') {
-      const [bug, direction, target] = params
-      return this.move(bug, direction, target)
-    }
-  }
-
-  place (bug, direction, target) {
-    const { placements } = firstRound(
-      nextRounds(
-        alreadyPlaced(
-          valid(
-            bug, this.pieces
-          ), this.placements
-        ), direction, target
+      return firstRound(
+        nextRounds(
+          alreadyPlaced(
+            valid(
+              bug, this.pieces
+            ), placements
+          ), direction, target
+        )
       )
-    )
-    this.placements = [...placements]
-    this.config = this.placements.map((placement) => serialize(placement))
-    return this
+    }
+    return { placements }
   }
 
-  move (bug, direction, target) {
-    console.warn(bug)
-    const { placements } = moveQueen(this.turn, this.config, target, direction)
-    this.placements = [...placements]
-    this.config = this.placements.map((placement) => serialize(placement))
-    return this
+  move ({ command, bug, direction, target, placements }) {
+    if (command === 'M') {
+      return queen(this.turn, target.split(':'), direction, placements)
+    }
+    return { placements }
   }
 }
