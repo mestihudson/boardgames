@@ -160,6 +160,30 @@ const queen = (
   return result
 }
 
+class Turns {
+  constructor (entries) {
+    this.entries = entries
+  }
+
+  placed (bug) {
+    return this.entries
+      .filter((p) => p.player === this.player())
+      .some((p) => p.bug === bug)
+  }
+
+  player () {
+    return this.size() % 2 === 0 ? 'O' : 'T'
+  }
+
+  next () {
+    return this.size() > 1
+  }
+
+  size () {
+    return this.entries.length
+  }
+}
+
 export default class Hive {
   constructor () {
     this.turn = new Turn()
@@ -188,15 +212,9 @@ export default class Hive {
   }
 
   alreadyPlaced({ bug, placements }) {
-    const next = placements.length
-    if (next > 1) {
-      const player = next % 2 === 0 ? 'O' : 'T'
-      const hasPlaced = placements
-        .filter((p) => p.player === player)
-        .some((p) => p.bug === bug)
-      if (hasPlaced) {
-        throw new BugAlreadyPlacedException()
-      }
+    const puts = new Turns(placements)
+    if (puts.next() && puts.placed(bug)) {
+      throw new BugAlreadyPlacedException()
     }
     return { bug, placements }
   }
