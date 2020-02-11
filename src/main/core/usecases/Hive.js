@@ -192,8 +192,8 @@ export default class Hive {
     this.turn = new Turn()
     this.placements = []
     this.bugs = new Bugs()
-    this.cells = new Cells()
     this.pĺayers = new Players()
+    this.cells = new Cells(new CellFactory(this.bugs, this.players))
   }
 
   nextRounds ({ bug, placements, direction, target }) {
@@ -215,46 +215,15 @@ export default class Hive {
   }
 }
 
-class Place {
-  constructor ({ bugs, cells, players }) {
-    this.bugs = bugs
-    this.cells = cells
-    this.players = players
+class CellFactory {
+  constructor (bugsRepository, playersRepository) {
+    this.bugs = bugsRepository
+    this.players = playersRepository
   }
 
-  execute({ bug, targetCell }) {
+  create (bug) {
     this.valid(bug)
-    if (this.firstRound()) {
-      if (this.first()) {
-        this.addCell(bug)
-      } else {
-        this.joinTo(this.createCell(bug), this.cells.by(targetCell))
-      }
-    } else {}
-  }
-
-  addCell (bug) {
-    const cell = createCell(bug)
-    this.notDone(cell)
-    this.cells.add(cell)
-  }
-
-  createCell(id) {
-    return new Cell(this.bugs.by(id), this.players.current())
-  }
-
-  first () {
-    return this.cells.length === 0
-  }
-
-  firstRound () {
-    return this.cells.length < 2
-  }
-
-  notDone (cell) {
-    if (this.cells.exists(cell)) {
-      throw new BugAlreadyPlacedException()
-    }
+    return new Cell(this.bugs.by(bug), this.players.current())
   }
 
   valid (bug) {
@@ -264,13 +233,78 @@ class Place {
   }
 }
 
+class Place {
+  constructor (cellsRepository) {
+    this.cells = cellsRepository
+  }
+
+  execute(souce, target, edge) {
+    if (this.firstRound()) {
+      if (this.notStarted()) {
+        this.cells.add(source)
+      } else {
+        this.cells.join(source, target, edge)
+      }
+    } else {
+      this.cells.join(source, target, edge)
+    }
+  }
+
+  notStarted () {
+    return this.cells.length === 0
+  }
+
+  firstRound () {
+    return this.cells.length < 2
+  }
+}
+
 class Cells {
-  constructor () {
+  constructor (cellFactory) {
     this.entries = []
+    this.cellFactory = cellFactory
   }
 
   exists (cell) {
+    return this.by(cell) !== undefined
+  }
+
+  by (cell) {
     return this.entries.find((entry) => entry.is(cell))
+  }
+
+  add (bug) {
+    this.entries.push(this.already(this.cellFactory.create(bug)))
+  }
+
+  touch (sourceCell, targetCell, edge) {
+     const [ source, target ] = [
+       sourceCell.join(targetCell, new Edge('North', 'N')),
+       targetCell.join(sourceCell, edge)
+     ]
+     return { source, target }
+  }
+
+  join (sourceBug, targetCell, edge) {
+    const { source, target } = this.touch(
+      this.cellFactory.create(sourceBug),
+      this.by(targetCell),
+      edge
+    )
+    this.add(source)
+    this.update(target)
+  }
+
+  update (target) {
+    this.entries = this.entries
+      .map((entry) => entry.is(target) ? target : entry)
+  }
+
+  already (cell) {
+    if (this.exists(cell)) {
+      throw new BugAlreadyPlacedException()
+    }
+    return cell
   }
 }
 
