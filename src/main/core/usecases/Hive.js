@@ -129,48 +129,12 @@ const queen = (
   return result
 }
 
-class Turns {
-  constructor (entries) {
-    this.entries = entries
-  }
-
-  placed (bug) {
-    return this.entries
-      .filter((p) => p.player === this.player())
-      .some((p) => p.bug === bug)
-  }
-
-  player () {
-    return this.size() % 2 === 0 ? 'O' : 'T'
-  }
-
-  next () {
-    return this.size() > 1
-  }
-
-  size () {
-    return this.entries.length
-  }
-}
-
 export default class Hive {
-  constructor () {
-    this.turn = new Turn()
-    this.bugs = new Bugs()
-    this.placements = []
-  }
-
-  execute (statement) {
-    this.turn.toggle()
-    const [command, bug, direction, target] = statement.split(',')
-    const { placements } = this.move({
-      ...this.place({
-        command, bug, direction, target, placements: this.placements
-      }), command, bug, direction, target
-    })
-    this.placements = [...placements]
-    this.config = this.placements.map((placement) => serialize(placement))
-    return this
+  move ({ command, bug, direction, target, placements }) {
+    if (command === 'M') {
+      return queen(this.turn, target.split(':'), direction, placements)
+    }
+    return { placements }
   }
 
   valid ({ bug }) {
@@ -198,6 +162,40 @@ export default class Hive {
     return { placements }
   }
 
+  place ({ command, bug, direction, target, placements }) {
+    if (command === 'P') {
+      return this.firstRound({
+        ...this.nextRounds({
+          ...this.alreadyPlaced({
+            ...this.valid({ bug }), placements
+          }), direction, target
+        })
+      })
+    }
+    return { placements }
+  }
+
+  execute (statement) {
+    this.turn.toggle()
+    const [command, bug, direction, target] = statement.split(',')
+    const { placements } = this.move({
+      ...this.place({
+        command, bug, direction, target, placements: this.placements
+      }), command, bug, direction, target
+    })
+    this.placements = [...placements]
+    this.config = this.placements.map((placement) => serialize(placement))
+    return this
+  }
+
+  constructor () {
+    this.turn = new Turn()
+    this.placements = []
+    this.bugs = new Bugs()
+    this.cells = new Cells()
+    this.pĺayers = new Players()
+  }
+
   nextRounds ({ bug, placements, direction, target }) {
     if (placements.length >= 2) {
       const result = {
@@ -215,25 +213,135 @@ export default class Hive {
     }
     return { bug, placements, direction }
   }
+}
 
-  place ({ command, bug, direction, target, placements }) {
-    if (command === 'P') {
-      return this.firstRound({
-        ...this.nextRounds({
-          ...this.alreadyPlaced({
-            ...this.valid({ bug }), placements
-          }), direction, target
-        })
-      })
-    }
-    return { placements }
+class Place {
+  constructor ({ bugs, cells, players }) {
+    this.bugs = bugs
+    this.cells = cells
+    this.players = players
   }
 
-  move ({ command, bug, direction, target, placements }) {
-    if (command === 'M') {
-      return queen(this.turn, target.split(':'), direction, placements)
+  execute({ bug, targetCell }) {
+    this.valid(bug)
+    if (this.firstRound()) {
+      if (this.first()) {
+        this.addCell(bug)
+      } else {
+        this.joinTo(this.createCell(bug), this.cells.by(targetCell))
+      }
+    } else {}
+  }
+
+  addCell (bug) {
+    const cell = createCell(bug)
+    this.notDone(cell)
+    this.cells.add(cell)
+  }
+
+  createCell(id) {
+    return new Cell(this.bugs.by(id), this.players.current())
+  }
+
+  first () {
+    return this.cells.length === 0
+  }
+
+  firstRound () {
+    return this.cells.length < 2
+  }
+
+  notDone (cell) {
+    if (this.cells.exists(cell)) {
+      throw new BugAlreadyPlacedException()
     }
-    return { placements }
+  }
+
+  valid (bug) {
+    if (!this.bugs.valid(bug)) {
+      throw new BugUnknownException()
+    }
+  }
+}
+
+class Cells {
+  constructor () {
+    this.entries = []
+  }
+
+  exists (cell) {
+    return this.entries.find((entry) => entry.is(cell))
+  }
+}
+
+class Cell {
+  constructor (bug, player, edges) {
+    this.bug = bug
+    this.player = player
+    this.edges = edges || new Edges()
+  }
+
+  is (
+    o,
+    by = (left, right) => left.bug.is(right.bug) && left.player.is(right.player)
+  ) {
+    return by(this, o)
+  }
+}
+
+class Edges {
+  constructor (entries) {
+    this.entries = (entries || [
+      ['North', 'N'], ['Northeast', 'NE'], ['Southeast', 'SE'],
+      ['South', 'S'], ['Southwest', 'SE'], ['Northwest', 'NW'],
+      ['Up', 'U'], ['Down', 'D']
+    ])
+      .map(([name, mnemonic], index) => new Edge(name, mnemonic, index))
+  }
+}
+
+class Edge {
+  constructor (name, mnemonic, index, cell) {
+    this.name = name
+    this.mnemonic = mnemonic
+    this.index = index
+    this.cell = cell
+  }
+}
+
+class Player {
+  constructor (name) {
+    this.name = name
+  }
+
+  name () {
+    return this.name
+  }
+  is (o) {
+    return this.name() === o.name()
+  }
+}
+
+class Players {
+  constructor (entries) {
+    this.first = false
+    this.entries = (entries || ['O', 'T']).map((name) => new Player(name))
+  }
+
+  toggle () {
+    this.first != this.first
+  }
+
+  current () {
+    return this.first ? this.one() : this.two()
+  }
+
+  one () {
+    return this.entries.find((entry, index) => index === 0)
+  }
+
+  two () {
+    return this.entries.find((entry, index) => index === 1)
   }
 }
 
@@ -247,14 +355,60 @@ class Turn {
   }
 }
 
-class Bugs {
-  constructor () {
-    this.names = [
-      'Q', 'S#1', 'S#2', 'B#1', 'B#2', 'G#1', 'G#2', 'G#3', 'A#1', 'A#2', 'A#3'
-    ]
+class Turns {
+  constructor (entries) {
+    this.entries = entries
   }
 
-  valid (bug) {
-    return this.names.some((name) => name === bug)
+  placed (bug) {
+    return this.entries
+      .filter((p) => p.player === this.player())
+      .some((p) => p.bug === bug)
+  }
+
+  player () {
+    return this.size() % 2 === 0 ? 'O' : 'T'
+  }
+
+  next () {
+    return this.size() > 1
+  }
+
+  size () {
+    return this.entries.length
+  }
+}
+
+class Bugs {
+  constructor () {
+    this.entries = [
+      ['Q'], [ 'S', 1 ], ['S', 2], ['B', 1], ['B', 2],
+      ['G', 1], ['G', 2], ['G', 3], ['A', 1], ['A', 2], ['A', 3]
+    ].map(([ name, index ]) => new Bug(name, index))
+  }
+
+  valid (id) {
+    return this.by(id) !== undefined
+  }
+
+  by (id) {
+    return this.entries.find((entry) => entry.id() === id)
+  }
+}
+
+class Bug {
+  constructor (name, index) {
+    this.name = name
+    this.index = index
+  }
+
+  id () {
+    return this.index === undefined
+      ? `${this.name}`
+      : `${this.name}#${this.index}`
+  }
+
+  is (o) {
+    return this.id() === o.id()
   }
 }
